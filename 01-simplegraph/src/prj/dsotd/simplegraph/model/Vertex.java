@@ -5,6 +5,15 @@ public class Vertex {
 	private String name;
 	private Object value;
 	
+	public Vertex() {
+		super();
+	}
+	
+	public Vertex(String name, Object value) {
+		setName(name);
+		setValue(value);
+	}
+	
 	public String getName() {
 		return name;
 	}
