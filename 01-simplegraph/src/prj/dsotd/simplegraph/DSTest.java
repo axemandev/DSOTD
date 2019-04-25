@@ -9,18 +9,23 @@ import prj.dsotd.simplegraph.model.Vertex;
 public class DSTest {
 	public static void main(String[] args) {	
 		Graph graph = GraphFactory.createGraph(GraphType.ADJACENCY_MATRIX, DirectionType.UNDIRECTED);
-		graph.addVertex(new Vertex("SubhardaGoke", 150));
-		graph.addVertex(new Vertex("DimantuDhotrika", 32));
-		graph.addVertex(new Vertex("RaghmaanBuzkaashi", 234));
-		graph.addVertex(new Vertex("JoffriBandast", 2323894));
-		Edge edge1 = new Edge(graph.getVertex("SubhardaGoke"), graph.getVertex("RaghmaanBuzkaashi"), 2350);
-		Edge edge2 = new Edge(graph.getVertex("DimantuDhotrika"), graph.getVertex("RaghmaanBuzkaashi"), 5520);
-		Edge edge3 = new Edge(graph.getVertex("SubhardaGoke"), graph.getVertex("JoffriBandast"), 50235);
-		graph.addEdge(edge1);
-		graph.addEdge(edge2);
-		graph.addEdge(edge3);
-		graph.printGraph();
-		graph.removeEdge(edge3);
-		graph.printGraph();
+		Vertex c = new Vertex("C", 234);
+		graph.addVertex(new Vertex("A", 150));
+		graph.addVertex(new Vertex("B", 32));
+		graph.addVertex(c);
+		graph.addVertex(new Vertex("D", 2323894));
+		graph.addEdge("A", "C", 2350.0);
+		graph.addEdge("A", "D", 50235.0);
+		graph.addEdge("B", "D", 5520.0, DirectionType.DIRECTED);
+		graph.addEdge(new Edge(graph.getVertex("C"), graph.getVertex("A"), 51235.0, null));
+		graph.print();
+		/*
+		 * graph.removeEdge("A", "D"); graph.print(); graph.removeVertex(c);
+		 * graph.print(); graph.removeVertex("B"); graph.print();
+		 * graph.removeVertex("D"); graph.print(); graph.removeVertex("A");
+		 * graph.print();
+		 */
+		
+		System.out.println(graph.getEdges(graph.getVertex("C"), graph.getVertex("D")));
 	}
 }

@@ -2,6 +2,7 @@ package prj.dsotd.simplegraph.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import prj.dsotd.simplegraph.model.DirectionType;
 import prj.dsotd.simplegraph.model.Edge;
@@ -12,8 +13,10 @@ public class AdjacencyMatrix implements Graph {
 
 	private List<Vertex> vertices;
 	private List<Edge> edges;
-	private List<List<Integer>> adjacencyMatrix;
+	private List<List<Double>> adjacencyMatrix;
 	private DirectionType directionType;
+
+	private static final Double DEFAULT_INIT_EDGE_WEIGHT = null;
 
 	public AdjacencyMatrix() {
 		vertices = new ArrayList<>();
@@ -21,7 +24,7 @@ public class AdjacencyMatrix implements Graph {
 		adjacencyMatrix = new ArrayList<>();
 		directionType = DirectionType.UNDIRECTED;
 	}
-	
+
 	public AdjacencyMatrix(DirectionType directionType) {
 		this();
 		this.directionType = directionType;
@@ -49,9 +52,41 @@ public class AdjacencyMatrix implements Graph {
 	}
 
 	@Override
+	public Vertex addVertex(String name, Object value) {
+		Vertex vertex = new Vertex(name, value);
+		this.addVertex(vertex);
+		return vertex;
+	}
+
+	@Override
+	public Boolean removeVertex(String name) {
+		return removeVertex(getVertex(name));
+	}
+
+	@Override
 	public Boolean removeVertex(Vertex x) {
-		// TODO Auto-generated method stub
-		return null;
+		/*
+		 * delete vertex from adj matrix get index of vertex in list of vertices and
+		 * delete/ row,col[idx] from adj matrix
+		 */
+		int index = vertices.indexOf(x);
+		// delete row
+		adjacencyMatrix.remove(index);
+		// del cols
+		for (List<Double> row : adjacencyMatrix) {
+			row.remove(index);
+		}
+
+		// remove edges from list
+		for (int i = edges.size() - 1; i >= 0; i--) {
+			if (edges.get(i).getSource().equals(x) || edges.get(i).getDestination().equals(x))
+				edges.remove(i);
+		}
+
+		// remove vertex from list
+		vertices.remove(index);
+
+		return true;
 	}
 
 	@Override
@@ -62,56 +97,69 @@ public class AdjacencyMatrix implements Graph {
 	}
 
 	@Override
+	/*
+	 * Object source, Object destination, Double weight, DirectionType directionType
+	 */
+	public Boolean addEdge(Object... args) {
+		try {
+			if (!(args.length >= 2)) {
+				throw new RuntimeException("ERROR! Source and Destination missing");
+			}
+			Vertex sourceVertex = (args[0] instanceof String) ? getVertex(args[0].toString()) : (Vertex) args[0];
+			Vertex destinationVertex = (args[1] instanceof String) ? getVertex(args[1].toString()) : (Vertex) args[1];
+			Double weight = args.length >= 3 ? (Double)args[2] : 0.0; 
+			DirectionType directionType = args.length >= 4 ? (DirectionType)args[3] : this.directionType; 
+			addEdge(new Edge(sourceVertex, destinationVertex, weight, directionType));
+			return true;
+		} catch (ClassCastException e) {
+			System.out.println("ERROR! Pass correct list of arguments.");
+			System.out.println("addEdge(String_or_Vertex, String_or_Vertex, [Double], [DirectionType])");
+			throw e;
+		}
+	}
+
+	@Override
 	public Boolean removeEdge(Edge e) {
 		setEdgeWeight(e, null);
 		edges.remove(e);
 		return true;
 	}
 
-	private void setEdgeWeight(Edge e, Integer weight) {
-		int sourceIndex = vertices.indexOf(getVertex(e.getSource().getName()));
-		int destinationIndex = vertices.indexOf(getVertex(e.getDestination().getName()));
-		// Default to graph direction type if edge direction type is not explicitly set
-		DirectionType directionType = e.getDirectionType() == null ? this.directionType : e.getDirectionType();
-		
-		adjacencyMatrix.get(sourceIndex).set(destinationIndex, weight);
-		if (directionType != DirectionType.DIRECTED)
-			adjacencyMatrix.get(destinationIndex).set(sourceIndex, weight);
+	@Override
+	public Boolean removeEdge(Object source, Object destination) {
+		return removeEdge(this.getEdge(source.toString(), destination.toString()));
 	}
-	
-	
+
 	@Override
 	public Object getVertexValue(Vertex x) {
-		// TODO Auto-generated method stub
-		return null;
+		return x.getValue();
 	}
 
 	@Override
 	public void setVertexValue(Vertex x, Object obj) {
-		// TODO Auto-generated method stub
-
+		x.setValue(obj);
 	}
 
 	@Override
 	public List<Edge> getEdges(Vertex source, Vertex destination) {
+		return edges.stream().filter(e -> ((e.getSource().equals(source) && e.getDestination().equals(destination))))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public Double getEdgeValue(Edge e) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Integer getEdgeValue(Edge e) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void setEdgeValue(Edge e, Long weight) {
+	public void setEdgeValue(Edge e, Double weight) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public Integer shortestDistance(Vertex source, Vertex destination) {
+	public Double shortestDistance(Vertex source, Vertex destination) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -130,34 +178,18 @@ public class AdjacencyMatrix implements Graph {
 		return null;
 	}
 
-	private Integer initEdgeValue() {
-		return null;
+	@Override
+	public DirectionType directionType() {
+		return directionType;
 	}
 
-	private void initNewEdges() {
-		// set rows and cols for new vertex to null
-		// if first vertex, handle separtely
-		Integer value = initEdgeValue();
-		Integer size = this.getSize();
-		if (size == 1) {
-			List<Integer> cols = new ArrayList<>();
-			cols.add(value);
-			adjacencyMatrix.add(cols);
-		} else {
-			// traverse through each row and add a new col.
-			for (List<Integer> row : adjacencyMatrix) {
-				row.add(value);
-			}
-			// finally add a new row for new vertex
-			List<Integer> newRow = new ArrayList<>();
-			for (Integer i = 0; i < size; i++) {
-				newRow.add(initEdgeValue());
-			}
-			adjacencyMatrix.add(newRow);
-		}
+	@Override
+	public Boolean isDirected() {
+		return directionType == DirectionType.DIRECTED;
 	}
 
-	public void printGraph() {
+	@Override
+	public void print() {
 		int loopCounter = 0;
 		// setting values for formatting
 		int maxLabelSize = maxLabelSize(vertices) + 1;
@@ -167,14 +199,44 @@ public class AdjacencyMatrix implements Graph {
 			System.out.print(rpad(vertex.getName(), valuePadding));
 		System.out.println();
 
-		for (List<Integer> list : adjacencyMatrix) {
+		for (List<Double> list : adjacencyMatrix) {
 			System.out.print(rpad(vertices.get(loopCounter++).getName() + " ", maxLabelSize));
-			for (Integer value : list) {
+			for (Double value : list) {
 				System.out.print(rpad(value + " ", valuePadding));
 			}
 			System.out.println(" ");
 		}
 		System.out.println(" ");
+	}
+
+	/* ---------------- Util / Helper Classes --------------- */
+
+	private Double initEdgeValue() {
+		// current default for initial value
+		return DEFAULT_INIT_EDGE_WEIGHT;
+	}
+
+	private void initNewEdges() {
+		// set rows and cols for new vertex to null
+		// if first vertex, handle separtely
+		Double value = initEdgeValue();
+		Integer size = this.getSize();
+		if (size == 1) {
+			List<Double> cols = new ArrayList<>();
+			cols.add(value);
+			adjacencyMatrix.add(cols);
+		} else {
+			// traverse through each row and add a new col.
+			for (List<Double> row : adjacencyMatrix) {
+				row.add(value);
+			}
+			// finally add a new row for new vertex
+			List<Double> newRow = new ArrayList<>();
+			for (int i = 0; i < size; i++) {
+				newRow.add(initEdgeValue());
+			}
+			adjacencyMatrix.add(newRow);
+		}
 	}
 
 	private String rpad(String string, Integer offset) {
@@ -189,10 +251,16 @@ public class AdjacencyMatrix implements Graph {
 		return maxSize;
 	}
 
-	private int maxValueSize(List<List<Integer>> adjacencyMatrix) {
+	/**
+	 * Get string (chars) size of value
+	 * 
+	 * @param adjacencyMatrix
+	 * @return
+	 */
+	private int maxValueSize(List<List<Double>> adjacencyMatrix) {
 		int maxSize = 0;
-		for (List<Integer> rows : adjacencyMatrix) {
-			for (Integer value : rows) {
+		for (List<Double> rows : adjacencyMatrix) {
+			for (Double value : rows) {
 				int length = (value == null) ? "null".length() : String.valueOf(value).length();
 				maxSize = length > maxSize ? length : maxSize;
 			}
@@ -200,28 +268,42 @@ public class AdjacencyMatrix implements Graph {
 		return maxSize;
 	}
 
-	@Override
-	public DirectionType directionType() {
-		return directionType;
+	private void setEdgeWeight(Edge e, Double weight) {
+		int sourceIndex = vertices.indexOf(getVertex(e.getSource().getName()));
+		int destinationIndex = vertices.indexOf(getVertex(e.getDestination().getName()));
+		// Default to graph direction type if edge direction type is not explicitly set
+		DirectionType directionType = e.getDirectionType() == null ? this.directionType : e.getDirectionType();
+
+		adjacencyMatrix.get(sourceIndex).set(destinationIndex, weight);
+		if (directionType != DirectionType.DIRECTED)
+			adjacencyMatrix.get(destinationIndex).set(sourceIndex, weight);
 	}
 
-	@Override
-	public Boolean isDirected() {
-		return directionType == DirectionType.DIRECTED;
-	}
+	private Edge getEdge(String source, String destination) {
 
-	@Override
-	public Boolean addEdge(Object source, Object destination, Integer weight) {
-		Vertex sourceVertex = getVertex(source.toString());
-		Vertex destinationVertex = getVertex(destination.toString());
-		addEdge(new Edge(sourceVertex, destinationVertex, weight));
-		return true;
-	}
+		Vertex sourceVertex = this.getVertex(source);
+		Vertex destinationVertex = this.getVertex(destination);
 
-	@Override
-	public Boolean removeEdge(Object source, Object destination) {
-		// TODO Auto-generated method stub
+		for (Edge edge : edges) {
+			if (edge.getSource().equals(sourceVertex) && edge.getDestination().equals(destinationVertex))
+				return edge;
+		}
+
 		return null;
+	}
+
+	public void printVertices() {
+		vertices.forEach(v -> {
+			System.out.print(v + " ");
+		});
+		System.out.println("");
+	}
+
+	public void printEdges() {
+		edges.forEach(e -> {
+			System.out.print(e + " ");
+		});
+		System.out.println("");
 	}
 
 }

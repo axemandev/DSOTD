@@ -4,22 +4,22 @@ public class Edge {
 
 	private Vertex source;
 	private Vertex destination;
-	private Integer weight;
+	private Double weight;
 	private DirectionType directionType;
 	
 	public Edge() {
 		super();
 	}
 	
-	public Edge (Vertex source, Vertex destination) {
-		this(source, destination, 0, null);
-	}
+//	public Edge (Vertex source, Vertex destination) {
+//		this(source, destination, 0.0, null);
+//	}
+//	
+//	public Edge (Vertex source, Vertex destination, Double weight) {
+//		this(source, destination, weight, null);
+//	}
 	
-	public Edge (Vertex source, Vertex destination, Integer weight) {
-		this(source, destination, weight, null);
-	}
-	
-	public Edge (Vertex source, Vertex destination, Integer weight, DirectionType directionType) {
+	public Edge (Vertex source, Vertex destination, Double weight, DirectionType directionType) {
 		setSource(source);
 		setDestination(destination);
 		setWeight(weight);
@@ -38,10 +38,10 @@ public class Edge {
 	public void setDestination(Vertex destination) {
 		this.destination = destination;
 	}
-	public Integer getWeight() {
+	public Double getWeight() {
 		return weight;
 	}
-	public void setWeight(Integer weight) {
+	public void setWeight(Double weight) {
 		this.weight = weight;
 	}
 	public DirectionType getDirectionType() {
